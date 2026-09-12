@@ -229,9 +229,11 @@ export default function WatchClient() {
           ref={containerRef}
           className="relative w-full bg-black aspect-video max-h-[78vh] mx-auto overflow-hidden"
         >
-          {/* YouTube iframe mount — native controls disabled via playerVars */}
+          {/* YouTube iframe mount — native controls disabled via playerVars.
+              We do NOT set pointer-events-none here because the YouTube IFrame
+              API's caption module needs pointer events to render properly. */}
           <div className="absolute inset-0 w-full h-full">
-            <div id="yt-player-mount" className="w-full h-full pointer-events-none" />
+            <div id="yt-player-mount" className="w-full h-full" />
           </div>
 
           {/* Hide any YouTube chrome with overlay masks on edges */}

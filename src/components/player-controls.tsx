@@ -170,7 +170,10 @@ export function PlayerControls({
     <div
       ref={containerRef}
       className="absolute inset-0 z-30 player-controls"
-      style={{ opacity: effectiveVisible ? 1 : 0 }}
+      style={{
+        opacity: effectiveVisible ? 1 : 0,
+        pointerEvents: effectiveVisible ? "auto" : "none",
+      }}
       onMouseMove={wake}
       onMouseLeave={() => state.playing && setShowControls(false)}
       onClick={(e) => {

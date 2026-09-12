@@ -925,6 +925,32 @@ export const SHOW_MOVIES: Movie[] = [
     playlistId: `pl-cartoonnetwork`,
     youtubePlaylistId: `PLZjNMNd2gTe5E6VQR04WVBsjvkDzVUBpw`,
   },
+  {
+    id: `yt-show-1`,
+    title: `Yeni Dizi 1`,
+    poster: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCWQ2oitZwkT6VpyrW5T-GiQJDPKbhlAhT7NAsp-wXVIqY8X7qzaj-eHmm&s=10`,
+    backdrop: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCWQ2oitZwkT6VpyrW5T-GiQJDPKbhlAhT7NAsp-wXVIqY8X7qzaj-eHmm&s=10`,
+    year: 2024,
+    rating: `TV-PG`,
+    duration: `1 Season`,
+    genres: ["Macera"],
+    description: `YouTube show — bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-1`,
+    youtubePlaylistId: `PLMmHigpjq0dw`,
+  },
+  {
+    id: `yt-show-2`,
+    title: `Yeni Dizi 2`,
+    poster: `https://img.rgstatic.com/content/show/090164d3-ce59-41eb-bb88-b04fa1e1999f/poster-342.jpg`,
+    backdrop: `https://img.rgstatic.com/content/show/090164d3-ce59-41eb-bb88-b04fa1e1999f/poster-342.jpg`,
+    year: 2024,
+    rating: `TV-PG`,
+    duration: `1 Season`,
+    genres: ["Macera"],
+    description: `YouTube show — bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-2`,
+    youtubePlaylistId: `PLWlbYPiFcSG8`,
+  },
 ];
 
 export const SHOW_PLAYLISTS: Playlist[] = [
@@ -1336,6 +1362,18 @@ export const SHOW_PLAYLISTS: Playlist[] = [
     description: `49 episodes across 1 season.`,
     episodes: makeEpisodes(`cartoonnetwork`, `Cartoon Network Collection`, 30, `https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/706be073ad50f9598c060a6223217220/KOLEKSIYONU-3.png`),
   },
+  {
+    id: `pl-yt-show-1`,
+    title: `Yeni Dizi 1 — Season 1`,
+    description: `YouTube show — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-1`, `Yeni Dizi 1`, 30, `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCWQ2oitZwkT6VpyrW5T-GiQJDPKbhlAhT7NAsp-wXVIqY8X7qzaj-eHmm&s=10`),
+  },
+  {
+    id: `pl-yt-show-2`,
+    title: `Yeni Dizi 2 — Season 1`,
+    description: `YouTube show — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-2`, `Yeni Dizi 2`, 30, `https://img.rgstatic.com/content/show/090164d3-ce59-41eb-bb88-b04fa1e1999f/poster-342.jpg`),
+  },
 ];
 
 export const SHOW_CATEGORIES: MovieCategory[] = [
@@ -1343,6 +1381,11 @@ export const SHOW_CATEGORIES: MovieCategory[] = [
     id: "trending",
     title: "Trending Now",
     movies: [SHOW_MOVIES[0], SHOW_MOVIES[1], SHOW_MOVIES[2], SHOW_MOVIES[3], SHOW_MOVIES[4], SHOW_MOVIES[5], SHOW_MOVIES[6], SHOW_MOVIES[7], SHOW_MOVIES[8], SHOW_MOVIES[9]],
+  },
+  {
+    id: "popular-tv-series",
+    title: "Popular TV Series",
+    movies: [SHOW_MOVIES[68], SHOW_MOVIES[69]],
   },
   {
     id: `komedi`,

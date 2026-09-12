@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "static.filmvandaag.nl" },
       { protocol: "https", hostname: "upload.wikimedia.org" },
       { protocol: "https", hostname: "www.tvtime.com" },
+      { protocol: "https", hostname: "img.rgstatic.com" },
     ],
   },
 };
