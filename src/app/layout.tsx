@@ -9,24 +9,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "D+SZ — Stream the Stories You Love",
+  title: "Goothiah TV — Stream the Stories You Love",
   description:
-    "D+SZ is a premium streaming experience. Browse trending originals, hit movies, and award-winning dramas — all in one place.",
-  keywords: ["D+SZ", "streaming", "movies", "TV shows", "originals", "watch online"],
-  authors: [{ name: "D+SZ" }],
+    "Goothiah TV is a premium streaming experience. Browse trending originals, hit movies, and award-winning dramas — all in one place.",
+  keywords: ["Goothiah TV", "streaming", "movies", "TV shows", "originals", "watch online"],
+  authors: [{ name: "Goothiah TV" }],
   icons: {
-    icon: "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/c88918a7996db3a88593b37770f73fd5/S-13-1.png",
+    icon: "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/1a6555bcf5f72a1c43ad29a08e449432/Goothiah-removebg-preview-1.png",
   },
   openGraph: {
-    title: "D+SZ — Stream the Stories You Love",
+    title: "Goothiah TV — Stream the Stories You Love",
     description:
       "Premium streaming. Browse trending originals, hit movies, and award-winning dramas.",
-    siteName: "D+SZ",
+    siteName: "Goothiah TV",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "D+SZ — Stream the Stories You Love",
+    title: "Goothiah TV — Stream the Stories You Love",
     description:
       "Premium streaming. Browse trending originals, hit movies, and award-winning dramas.",
   },

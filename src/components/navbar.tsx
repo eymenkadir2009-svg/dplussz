@@ -39,11 +39,11 @@ export function Navbar() {
       >
         <div className="flex items-center justify-between px-4 md:px-10 py-3">
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center group" aria-label="D+SZ home">
+            <Link href="/" className="flex items-center group" aria-label="Goothiah TV home">
               <div className="relative w-12 h-12 md:w-14 md:h-14 shrink-0">
                 <Image
                   src={SITE.logoUrl}
-                  alt="D+SZ logo"
+                  alt="Goothiah TV logo"
                   fill
                   className="object-contain"
                   unoptimized

@@ -110,7 +110,7 @@ export default function VideoClient() {
 
         <div className="relative h-full flex flex-col justify-end px-4 md:px-12 pb-10 max-w-3xl pt-32">
           <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase text-neutral-200">
-            <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-sm">D+SZ</span>
+            <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-sm">Goothiah TV</span>
             <span>{loading ? "Yükleniyor…" : `${episodes.length} Bölüm`}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight drop-shadow-2xl">

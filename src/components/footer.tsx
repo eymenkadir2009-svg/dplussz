@@ -27,7 +27,7 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-neutral-400">
-              <li>About D+SZ</li>
+              <li>About Goothiah TV</li>
               <li>Careers</li>
               <li>Press</li>
               <li>Investors</li>

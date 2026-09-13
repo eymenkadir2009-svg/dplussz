@@ -1,9 +1,9 @@
-# D+SZ — Starz-style Streaming Site
+# Goothiah TV — Starz-style Streaming Site
 
 A black-themed streaming UI built with **Next.js 16 + TypeScript + Tailwind CSS 4**.
 
 ## Features
-- Pure-black home page with D+SZ logo navbar and featured-movie hero
+- Pure-black home page with Goothiah TV logo navbar and featured-movie hero
 - Six horizontal movie-card sliders, each with hover-reveal left/right arrows
   that auto-disable at scroll boundaries
 - Working search overlay (full-screen, filters the catalog by title, genre,

@@ -31,7 +31,7 @@ export function HeroSection({ movie }: HeroSectionProps) {
       {/* Content */}
       <div className="relative h-full flex flex-col justify-end md:justify-center px-4 md:px-12 pb-24 md:pb-12 max-w-4xl">
         <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-semibold tracking-widest uppercase text-neutral-200">
-          <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-sm">D+SZ Original</span>
+          <span className="px-2 py-0.5 rounded bg-white/15 backdrop-blur-sm">Goothiah TV Original</span>
           <span className="text-neutral-300">{movie.year} • {movie.rating}</span>
         </div>
 

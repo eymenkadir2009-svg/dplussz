@@ -259,7 +259,7 @@ export const CATEGORIES: MovieCategory[] = [
   },
   {
     id: "originals",
-    title: "D+SZ Originals",
+    title: "Goothiah TV Originals",
     movies: [MOVIES[1], MOVIES[4], MOVIES[7], MOVIES[11], MOVIES[0], MOVIES[8]],
   },
   {
