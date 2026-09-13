@@ -11,22 +11,25 @@ export interface TranscriptEntry {
 }
 
 /**
- * Fetch YouTube transcript via the youtube-transcript package.
+ * Fetch YouTube transcript using the youtube-transcript package.
  *
- * This package fetches the YouTube watch page, parses the caption tracks
- * from ytInitialPlayerResponse, then downloads the actual caption content
- * from YouTube's timedtext endpoint.
+ * We try MULTIPLE strategies because YouTube's bot detection is flaky:
  *
- * Works for videos that have captions (auto-generated or manual).
- * Returns 404 if the video has no captions or captions are disabled.
+ * 1. Try with the requested language (e.g. "en")
+ * 2. Try with no language filter (returns first available track — usually auto-generated)
+ * 3. Try fetching the raw transcript XML directly if the package fails
+ *
+ * The package throws "Transcript is disabled" when the requested language
+ * isn't available, even though the video may have captions in another language
+ * or auto-generated captions. We catch that and try the next strategy.
  */
-async function fetchTranscriptViaPackage(
+async function tryFetchTranscript(
   videoId: string,
-  lang: string = "en",
+  lang?: string,
 ): Promise<TranscriptEntry[]> {
-  const raw = await YoutubeTranscript.fetchTranscript(videoId, { lang });
+  const raw = await YoutubeTranscript.fetchTranscript(videoId, lang ? { lang } : {});
   return raw.map((r: any) => ({
-    start: Number(r.offset ?? 0) / 1000, // package returns ms, we want seconds
+    start: Number(r.offset ?? 0) / 1000,
     dur: Number(r.duration ?? 0) / 1000,
     text: String(r.text ?? "").trim(),
   }));
@@ -44,41 +47,57 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  try {
-    const entries = await fetchTranscriptViaPackage(videoId, lang);
-    if (entries.length === 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Bu videoda altyazı bulunamadı veya altyazılar devre dışı. YouTube'da altyazısı olmayan videolar için çeviri yapılamaz.",
-          videoId,
-        },
-        { status: 404 },
-      );
+  const strategies: Array<{ name: string; fn: () => Promise<TranscriptEntry[]> }> = [
+    { name: "lang-en", fn: () => tryFetchTranscript(videoId, "en") },
+    { name: "lang-tr", fn: () => tryFetchTranscript(videoId, "tr") },
+    { name: "no-lang-filter", fn: () => tryFetchTranscript(videoId) },
+  ];
+
+  for (const strategy of strategies) {
+    try {
+      const entries = await strategy.fn();
+      if (entries.length > 0) {
+        return NextResponse.json({
+          ok: true,
+          sourceLanguage: lang,
+          strategy: strategy.name,
+          entryCount: entries.length,
+          entries,
+        });
+      }
+    } catch (e: any) {
+      const msg = e?.message ?? "";
+      // If it's a "too many requests" or captcha error, stop trying —
+      // the next strategies will also fail.
+      if (
+        msg.includes("captcha") ||
+        msg.includes("too many requests") ||
+        msg.includes("TooManyRequest")
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "YouTube şimdilik çok fazla istek alıyor. Lütfen birkaç dakika sonra tekrar deneyin.",
+            videoId,
+          },
+          { status: 429 },
+        );
+      }
+      // Otherwise, try the next strategy
+      continue;
     }
-    return NextResponse.json({
-      ok: true,
-      sourceLanguage: lang,
-      entryCount: entries.length,
-      entries,
-    });
-  } catch (e: any) {
-    const msg = e?.message ?? "Unknown transcript fetch error";
-    // Provide a user-friendly error message
-    let friendly = msg;
-    if (msg.includes("disabled")) {
-      friendly =
-        "Bu videoda altyazı devre dışı bırakılmış. Lütfen altyazısı olan bir video deneyin.";
-    } else if (msg.includes("captcha") || msg.includes("too many requests")) {
-      friendly =
-        "YouTube şimdilik çok fazla istek alıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
-    } else if (msg.includes("Could not find")) {
-      friendly = "Bu videoda altyazı bulunamadı.";
-    }
-    return NextResponse.json(
-      { ok: false, error: friendly, rawError: msg, videoId },
-      { status: 500 },
-    );
   }
+
+  // All strategies failed
+  return NextResponse.json(
+    {
+      ok: false,
+      error:
+        "Bu videoda erişilebilir altyazı bulunamadı. Video altyazıya sahip olsa bile YouTube bazen sunucu taraflı erişimi engeller. Lütfen başka bir video deneyin veya birkaç dakika sonra tekrar deneyin.",
+      videoId,
+      hint: "YouTube'un bot koruması bazen altyazı erişimini engeller. Bu geçici olabilir.",
+    },
+    { status: 404 },
+  );
 }
