@@ -89,20 +89,42 @@ export function PlayerControls({
     };
   }, [state.playing, scheduleHide]);
 
+  // Track mouse position globally (on document) and check if the cursor
+  // is within the player stage bounds. This is necessary because:
+  // - The YouTube iframe covers the entire player area and captures all
+  //   mouse events (cross-origin iframe, events don't bubble up).
+  // - When controls are hidden, pointerEvents:none on the overlay means
+  //   it can't receive mouse events either.
+  // By listening on document, we always get mouse coordinates and can
+  // determine if the cursor is over the player.
+  // Re-attach when state.ready changes so containerRef is definitely set.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
     const onMove = (e: MouseEvent) => {
       const rect = el.getBoundingClientRect();
-      const y = e.clientY - rect.top;
+      if (rect.width === 0 || rect.height === 0) return;
+      const x = e.clientX;
+      const y = e.clientY;
+      const inPlayer =
+        x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+      if (!inPlayer) return;
+
+      const relY = y - rect.top;
       const h = rect.height;
-      if (y > h - 180 || y < 100) {
+      // Show controls when cursor is in the bottom 200px (controls area)
+      // OR top 120px (title area) OR anywhere if not playing.
+      if (!state.playing || relY > h - 200 || relY < 120) {
         wake();
       }
     };
-    el.addEventListener("mousemove", onMove);
-    return () => el.removeEventListener("mousemove", onMove);
-  }, [wake]);
+
+    document.addEventListener("mousemove", onMove);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+    };
+  }, [wake, state.playing, state.ready]);
 
   const effectiveVisible = showControls || !state.playing || isDragging;
 
@@ -165,8 +187,6 @@ export function PlayerControls({
         opacity: effectiveVisible ? 1 : 0,
         pointerEvents: effectiveVisible ? "auto" : "none",
       }}
-      onMouseMove={wake}
-      onMouseLeave={() => state.playing && setShowControls(false)}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           if (state.playing) onPause();
