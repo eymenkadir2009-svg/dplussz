@@ -3,66 +3,105 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-interface LanguageButtonProps {
-  /**
-   * Callback to enable YouTube native captions with Turkish auto-translation.
-   * Called when the user clicks the button to turn subtitles ON.
-   */
-  onEnable: () => void;
-  /**
-   * Callback to disable YouTube native captions.
-   * Called when the user clicks the button to turn subtitles OFF.
-   */
-  onDisable: () => void;
-  /**
-   * Whether captions are currently enabled (controlled by the parent).
-   */
-  isActive: boolean;
-  /**
-   * Whether the player is ready to accept caption commands.
-   */
-  enabled: boolean;
+interface SubtitleEntry {
+  start: number;
+  dur: number;
+  text: string;
 }
+
+interface LanguageButtonProps {
+  videoId: string | null | undefined;
+  enabled: boolean;
+  onToggle: (entries: SubtitleEntry[] | null) => void;
+  isActive: boolean;
+}
+
+type Status = "idle" | "fetching" | "translating" | "ready" | "error";
 
 /**
  * Language selector button with a Turkish flag icon.
  *
- * When clicked, it enables YouTube's native captions module and sets
- * the translation language to Turkish. YouTube handles both the caption
- * fetching and the translation automatically — no server-side API calls
- * needed.
+ * When clicked:
+ * 1. Fetches the video's transcript via /api/transcript (server-side,
+ *    uses youtube-transcript package to fetch real YouTube captions)
+ * 2. Translates the entries to Turkish via /api/translate (LLM7)
+ * 3. Passes the translated entries to the parent via onToggle()
+ * 4. The parent renders them in the custom SubtitleOverlay
  *
- * This approach is much more reliable than fetching transcripts server-side
- * (which YouTube blocks with "Sign in to confirm you're not a bot") because:
- * - The captions are loaded directly by the YouTube iframe player
- * - YouTube handles the translation natively
- * - No API key or CORS proxy needed
- * - Works for any video that has captions (auto-generated or manual)
+ * If the video has no captions, shows a user-friendly error.
  */
 export function LanguageButton({
-  onEnable,
-  onDisable,
-  isActive,
+  videoId,
   enabled,
+  onToggle,
+  isActive,
 }: LanguageButtonProps) {
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (isActive) {
-      onDisable();
+      onToggle(null);
+      setStatus("idle");
+      setError(null);
       return;
     }
-    setLoading(true);
-    onEnable();
-    // Brief loading state to give feedback
-    setTimeout(() => setLoading(false), 1000);
+    if (!videoId) return;
+
+    setStatus("fetching");
+    setError(null);
+
+    try {
+      // Step 1: Fetch transcript
+      const res = await fetch(
+        `/api/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
+      );
+      const data = await res.json();
+      if (!data.ok) {
+        throw new Error(data.error ?? "Transcript fetch failed");
+      }
+      const entries: SubtitleEntry[] = data.entries ?? [];
+      if (entries.length === 0) {
+        throw new Error("Bu videoda altyazı bulunamadı.");
+      }
+
+      // Step 2: Translate to Turkish
+      setStatus("translating");
+      const tr = await fetch(`/api/translate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entries,
+          source: data.sourceLanguage ?? "en",
+          target: "tr",
+        }),
+      });
+      const trData = await tr.json();
+      if (!trData.ok) {
+        throw new Error(trData.error ?? "Çeviri başarısız oldu");
+      }
+      const translated: SubtitleEntry[] = trData.entries ?? [];
+      if (translated.length === 0) {
+        throw new Error("Çeviri sonucu boş.");
+      }
+
+      // Step 3: Pass to parent to render in custom overlay
+      onToggle(translated);
+      setStatus("ready");
+    } catch (e: any) {
+      setError(e?.message ?? "Altyazılar yüklenemedi");
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 5000);
+    }
   };
+
+  const isLoading = status === "fetching" || status === "translating";
 
   return (
     <div className="relative">
       <button
         type="button"
-        disabled={!enabled}
+        disabled={!enabled || isLoading}
         onClick={handleClick}
         className={`relative flex items-center gap-2 px-3 py-2 rounded-md ring-1 transition-all ${
           isActive
@@ -71,20 +110,35 @@ export function LanguageButton({
         } disabled:opacity-40 disabled:cursor-not-allowed`}
         aria-label="Toggle Turkish subtitles"
         title={
-          isActive
-            ? "Türkçe altyazı açık — kapatmak için tıkla"
-            : "Türkçe altyazı (YouTube otomatik çeviri)"
+          status === "fetching"
+            ? "Altyazı çekiliyor…"
+            : status === "translating"
+              ? "Türkçe'ye çevriliyor…"
+              : status === "error"
+                ? error ?? "Hata"
+                : "Türkçe altyazı (otomatik çeviri)"
         }
       >
-        {loading ? (
+        {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <TurkishFlagIcon className="w-5 h-5" />
         )}
         <span className="text-xs font-semibold hidden md:block">
-          {isActive ? "TR · ON" : "TR"}
+          {isActive
+            ? "TR · ON"
+            : status === "fetching"
+              ? "Çekiliyor…"
+              : status === "translating"
+                ? "Çevriliyor…"
+                : "TR"}
         </span>
       </button>
+      {status === "error" && error && (
+        <div className="absolute bottom-full mb-2 right-0 max-w-xs px-3 py-2 rounded bg-black/95 text-white text-xs ring-1 ring-red-500/40 shadow-lg">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
@@ -112,3 +166,5 @@ export function TurkishFlagIcon({ className = "w-5 h-5" }: { className?: string 
     </svg>
   );
 }
+
+export type { SubtitleEntry };

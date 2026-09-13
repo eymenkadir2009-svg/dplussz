@@ -107,8 +107,6 @@ export default function WatchClient() {
     seek,
     setVolume,
     toggleMute,
-    enableCaptions,
-    disableCaptions,
   } = useYouTubePlayer("yt-player-mount", currentYtId);
 
   // Fullscreen
@@ -266,8 +264,6 @@ export default function WatchClient() {
             hasNext={!!nextEpisode}
             hasPrev={!!prevEpisode}
             videoId={currentYtId}
-            onEnableCaptions={enableCaptions}
-            onDisableCaptions={disableCaptions}
           />
         </div>
 

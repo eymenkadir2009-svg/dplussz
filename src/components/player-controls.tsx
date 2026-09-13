@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { YouTubePlayerState } from "@/hooks/use-youtube-player";
 import { formatTime } from "@/lib/constants";
-import { LanguageButton } from "@/components/language-button";
+import {
+  LanguageButton,
+  type SubtitleEntry,
+} from "@/components/language-button";
+import { SubtitleOverlay } from "@/components/subtitle-overlay";
 
 interface PlayerControlsProps {
   state: YouTubePlayerState;
@@ -34,10 +38,6 @@ interface PlayerControlsProps {
   hasNext?: boolean;
   hasPrev?: boolean;
   videoId?: string | null;
-  /** Enable YouTube native captions with Turkish auto-translation */
-  onEnableCaptions: (lang: string, translateTo?: string) => void;
-  /** Disable YouTube native captions */
-  onDisableCaptions: () => void;
 }
 
 export function PlayerControls({
@@ -56,9 +56,13 @@ export function PlayerControls({
   hasNext,
   hasPrev,
   videoId,
-  onEnableCaptions,
-  onDisableCaptions,
 }: PlayerControlsProps) {
+  // Custom subtitle entries — fetched from /api/transcript and translated
+  // to Turkish via /api/translate. Rendered in our custom SubtitleOverlay,
+  // NOT in YouTube's native caption module.
+  const [subtitleEntries, setSubtitleEntries] = useState<SubtitleEntry[] | null>(
+    null,
+  );
   const [showControls, setShowControls] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
@@ -66,7 +70,6 @@ export function PlayerControls({
   const progressRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-hide controls when playing & not dragging
   const scheduleHide = useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
@@ -90,7 +93,6 @@ export function PlayerControls({
     };
   }, [state.playing, scheduleHide]);
 
-  // Track mouse position so we can re-show controls when the cursor moves
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -106,10 +108,8 @@ export function PlayerControls({
     return () => el.removeEventListener("mousemove", onMove);
   }, [wake]);
 
-  // Effective visibility for the *controls bar & title*
   const effectiveVisible = showControls || !state.playing || isDragging;
 
-  // Scrubbing math
   const getSecondsFromEvent = (clientX: number) => {
     const el = progressRef.current;
     if (!el || !state.duration) return 0;
@@ -183,6 +183,12 @@ export function PlayerControls({
         }
       }}
     >
+      {/* Custom subtitle overlay — shows Turkish-translated subtitles */}
+      <SubtitleOverlay
+        entries={subtitleEntries}
+        currentTime={state.currentTime}
+      />
+
       {/* Top gradient + title */}
       <div className="player-gradient-top absolute top-0 left-0 right-0 px-6 md:px-10 pt-5 pb-20 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
@@ -346,13 +352,13 @@ export function PlayerControls({
           </div>
 
           <div className="flex items-center gap-3 md:gap-5">
-            {/* Language button — uses YouTube's native captions module
-                with auto-translation to Turkish. No server-side fetch needed. */}
+            {/* Language button — fetches transcript, translates to Turkish,
+                shows in custom SubtitleOverlay (NOT YouTube native captions) */}
             <LanguageButton
-              onEnable={() => onEnableCaptions("en", "tr")}
-              onDisable={onDisableCaptions}
-              isActive={state.captionsEnabled}
-              enabled={state.ready}
+              videoId={videoId}
+              enabled={!!videoId}
+              isActive={!!subtitleEntries}
+              onToggle={(entries) => setSubtitleEntries(entries)}
             />
             <button
               onClick={onToggleFullscreen}

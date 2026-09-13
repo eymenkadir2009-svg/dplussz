@@ -21,8 +21,6 @@ export interface YouTubePlayerState {
   volume: number;
   muted: boolean;
   ended: boolean;
-  captionsReady: boolean;
-  captionsEnabled: boolean;
 }
 
 export const initialPlayerState: YouTubePlayerState = {
@@ -34,8 +32,6 @@ export const initialPlayerState: YouTubePlayerState = {
   volume: 100,
   muted: false,
   ended: false,
-  captionsReady: false,
-  captionsEnabled: false,
 };
 
 let apiPromise: Promise<void> | null = null;
@@ -67,13 +63,6 @@ export function useYouTubePlayer(
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [state, setState] = useState<YouTubePlayerState>(initialPlayerState);
-
-  // Keep track of pending caption requests so we can apply them once
-  // the captions module becomes available.
-  const pendingCaptionsRef = useRef<{
-    lang: string;
-    translateTo?: string;
-  } | null>(null);
 
   // Initialise / re-initialise player when videoId changes
   useEffect(() => {
@@ -109,11 +98,9 @@ export function useYouTubePlayer(
           fs: 0,
           disablekb: 1,
           playsinline: 1,
-          // Don't auto-load captions — we control them via the Language button.
-          // cc_load_policy=1 would force English captions to show immediately
-          // and the translationLanguage setting might not override them.
+          // No native captions — we render custom translated subtitles
+          // in our own SubtitleOverlay component.
           cc_load_policy: 0,
-          cc_lang_pref: "tr", // Prefer Turkish for caption translation
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         events: {
@@ -127,47 +114,6 @@ export function useYouTubePlayer(
               volume: p.getVolume() ?? 100,
               muted: p.isMuted?.() ?? false,
             }));
-
-            // Try to load the captions module immediately on ready.
-            // The module might not be available yet, but we try anyway —
-            // onApiChange will fire later if the module becomes available.
-            try {
-              p.loadModule?.("captions");
-              // Hide captions initially — user enables them via the button.
-              setTimeout(() => {
-                try {
-                  p.setOption("captions", "visibility", false);
-                } catch {
-                  /* ignore */
-                }
-              }, 500);
-            } catch {
-              /* ignore */
-            }
-
-            // Apply pending caption request if one was queued before ready.
-            const pending = pendingCaptionsRef.current;
-            if (pending) {
-              pendingCaptionsRef.current = null;
-              setTimeout(() => {
-                try {
-                  p.setOption("captions", "track", { languageCode: pending.lang });
-                  if (pending.translateTo) {
-                    p.setOption("captions", "translationLanguage", {
-                      languageCode: pending.translateTo,
-                      languageName:
-                        pending.translateTo === "tr"
-                          ? "Turkish"
-                          : pending.translateTo,
-                    });
-                  }
-                  p.setOption("captions", "visibility", true);
-                  setState((s) => ({ ...s, captionsEnabled: true, captionsReady: true }));
-                } catch {
-                  /* ignore */
-                }
-              }, 1000);
-            }
           },
           onStateChange: (e: any) => {
             const YTState = window.YT?.PlayerState;
@@ -180,53 +126,6 @@ export function useYouTubePlayer(
               ended: isEnded,
               duration: playerRef.current?.getDuration?.() || s.duration,
             }));
-          },
-          onApiChange: () => {
-            // The captions module API is now available. Apply any pending
-            // caption requests.
-            const p = playerRef.current;
-            if (!p) return;
-            try {
-              // Check if the captions module is available
-              const modules = p.getAvailableModules?.() ?? [];
-              if (modules.includes("captions") || p.getOption) {
-                p.loadModule?.("captions");
-                setState((s) => ({ ...s, captionsReady: true }));
-
-                // Apply pending caption request
-                const pending = pendingCaptionsRef.current;
-                if (pending) {
-                  // Don't clear the ref here — we want to re-apply on each
-                  // onApiChange event in case YouTube resets the caption settings.
-                  try {
-                    // Step 1: Set the source track language
-                    p.setOption("captions", "track", {
-                      languageCode: pending.lang,
-                    });
-
-                    // Step 2: Set translation language to Turkish
-                    // YouTube's API expects {languageCode, languageName} object
-                    if (pending.translateTo) {
-                      p.setOption("captions", "translationLanguage", {
-                        languageCode: pending.translateTo,
-                        languageName:
-                          pending.translateTo === "tr"
-                            ? "Turkish"
-                            : pending.translateTo,
-                      });
-                    }
-
-                    // Step 3: Make captions visible
-                    p.setOption("captions", "visibility", true);
-                    setState((s) => ({ ...s, captionsEnabled: true }));
-                  } catch {
-                    /* ignore */
-                  }
-                }
-              }
-            } catch {
-              /* ignore */
-            }
           },
           onPlaybackQualityChange: () => {},
           onError: () => {
@@ -271,7 +170,6 @@ export function useYouTubePlayer(
         }
         playerRef.current = null;
       }
-      pendingCaptionsRef.current = null;
       setState(initialPlayerState);
     };
   }, [containerId, videoId]);
@@ -337,76 +235,6 @@ export function useYouTubePlayer(
     }
   }, []);
 
-  /**
-   * Enable YouTube native captions with auto-translation to Turkish.
-   *
-   * Tries multiple times with delays because the captions module may not
-   * be immediately available after onReady. Also relies on the onApiChange
-   * event handler to re-apply settings if YouTube resets them.
-   */
-  const enableCaptions = useCallback(
-    (lang: string, translateTo?: string) => {
-      const p = playerRef.current;
-      if (!p) return;
-
-      // Store the request so onApiChange can apply it if the module
-      // isn't ready yet. We keep it stored (don't clear) so it gets
-      // re-applied on every onApiChange event.
-      pendingCaptionsRef.current = { lang, translateTo };
-
-      const applyCaptions = (attempt: number) => {
-        try {
-          // Load the captions module
-          p.loadModule?.("captions");
-
-          // Set the source caption track
-          p.setOption("captions", "track", { languageCode: lang });
-
-          // Set the translation language to Turkish
-          if (translateTo) {
-            p.setOption("captions", "translationLanguage", {
-              languageCode: translateTo,
-              languageName:
-                translateTo === "tr" ? "Turkish" : translateTo,
-            });
-          }
-
-          // Make captions visible
-          p.setOption("captions", "visibility", true);
-          setState((s) => ({
-            ...s,
-            captionsEnabled: true,
-            captionsReady: true,
-          }));
-        } catch {
-          // Retry up to 5 times with increasing delays
-          if (attempt < 5) {
-            setTimeout(() => applyCaptions(attempt + 1), 1000 * (attempt + 1));
-          }
-        }
-      };
-
-      // Start immediately
-      applyCaptions(0);
-    },
-    [],
-  );
-
-  /**
-   * Disable YouTube native captions.
-   */
-  const disableCaptions = useCallback(() => {
-    const p = playerRef.current;
-    if (!p) return;
-    pendingCaptionsRef.current = null;
-    try {
-      p.setOption("captions", "visibility", false);
-      setState((s) => ({ ...s, captionsEnabled: false }));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   return {
     state,
     play,
@@ -414,7 +242,5 @@ export function useYouTubePlayer(
     seek,
     setVolume,
     toggleMute,
-    enableCaptions,
-    disableCaptions,
   };
 }
