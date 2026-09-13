@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.tvtime.com" },
       { protocol: "https", hostname: "img.rgstatic.com" },
       { protocol: "https", hostname: "static.episodate.com" },
+      { protocol: "https", hostname: "canvas-lb.tubitv.com" },
+      { protocol: "https", hostname: "cdn.marvel.com" },
+      { protocol: "https", hostname: "cizgimax.online" },
+      { protocol: "https", hostname: "mediaproxy.tvtropes.org" },
+      { protocol: "https", hostname: "occ-0-55-56.1.nflxso.net" },
     ],
   },
 };
