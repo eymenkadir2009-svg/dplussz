@@ -107,6 +107,8 @@ export default function WatchClient() {
     seek,
     setVolume,
     toggleMute,
+    enableCaptions,
+    disableCaptions,
   } = useYouTubePlayer("yt-player-mount", currentYtId);
 
   // Fullscreen
@@ -228,8 +230,7 @@ export default function WatchClient() {
           className="relative w-full bg-black aspect-video max-h-[78vh] mx-auto overflow-hidden"
         >
           {/* YouTube iframe mount — native controls disabled via playerVars.
-              We do NOT set pointer-events-none here because the YouTube IFrame
-              API's caption module needs pointer events to render properly. */}
+              pointer-events NOT disabled so YouTube can render captions natively. */}
           <div className="absolute inset-0 w-full h-full">
             <div id="yt-player-mount" className="w-full h-full" />
           </div>
@@ -264,6 +265,8 @@ export default function WatchClient() {
             hasNext={!!nextEpisode}
             hasPrev={!!prevEpisode}
             videoId={currentYtId}
+            onEnableCaptions={enableCaptions}
+            onDisableCaptions={disableCaptions}
           />
         </div>
 

@@ -3,105 +3,52 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-interface SubtitleEntry {
-  start: number;
-  dur: number;
-  text: string;
-}
-
 interface LanguageButtonProps {
-  videoId: string | null | undefined;
-  enabled: boolean;
-  onToggle: (entries: SubtitleEntry[] | null) => void;
+  /** Enable YouTube native captions with Turkish auto-translation */
+  onEnable: () => void;
+  /** Disable YouTube native captions */
+  onDisable: () => void;
+  /** Whether captions are currently enabled */
   isActive: boolean;
+  /** Whether the player is ready */
+  enabled: boolean;
 }
-
-type Status = "idle" | "fetching" | "translating" | "ready" | "error";
 
 /**
  * Language selector button with a Turkish flag icon.
  *
- * When clicked:
- * 1. Fetches the video's transcript via /api/transcript (server-side,
- *    uses youtube-transcript package to fetch real YouTube captions)
- * 2. Translates the entries to Turkish via /api/translate (LLM7)
- * 3. Passes the translated entries to the parent via onToggle()
- * 4. The parent renders them in the custom SubtitleOverlay
+ * When clicked, it enables YouTube's native captions module and sets
+ * auto-translation to Turkish. YouTube handles both the caption
+ * fetching AND the translation automatically — same as clicking
+ * CC → Auto-translate → Turkish on YouTube.com.
  *
- * If the video has no captions, shows a user-friendly error.
+ * No server-side API calls needed. Works for any video that has
+ * captions (auto-generated or manual).
  */
 export function LanguageButton({
-  videoId,
-  enabled,
-  onToggle,
+  onEnable,
+  onDisable,
   isActive,
+  enabled,
 }: LanguageButtonProps) {
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleClick = async () => {
+  const handleClick = () => {
     if (isActive) {
-      onToggle(null);
-      setStatus("idle");
-      setError(null);
+      onDisable();
       return;
     }
-    if (!videoId) return;
-
-    setStatus("fetching");
-    setError(null);
-
-    try {
-      // Step 1: Fetch transcript
-      const res = await fetch(
-        `/api/transcript?videoId=${encodeURIComponent(videoId)}&lang=en`,
-      );
-      const data = await res.json();
-      if (!data.ok) {
-        throw new Error(data.error ?? "Transcript fetch failed");
-      }
-      const entries: SubtitleEntry[] = data.entries ?? [];
-      if (entries.length === 0) {
-        throw new Error("Bu videoda altyazı bulunamadı.");
-      }
-
-      // Step 2: Translate to Turkish
-      setStatus("translating");
-      const tr = await fetch(`/api/translate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entries,
-          source: data.sourceLanguage ?? "en",
-          target: "tr",
-        }),
-      });
-      const trData = await tr.json();
-      if (!trData.ok) {
-        throw new Error(trData.error ?? "Çeviri başarısız oldu");
-      }
-      const translated: SubtitleEntry[] = trData.entries ?? [];
-      if (translated.length === 0) {
-        throw new Error("Çeviri sonucu boş.");
-      }
-
-      // Step 3: Pass to parent to render in custom overlay
-      onToggle(translated);
-      setStatus("ready");
-    } catch (e: any) {
-      setError(e?.message ?? "Altyazılar yüklenemedi");
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 5000);
-    }
+    setLoading(true);
+    onEnable();
+    // Brief loading indicator
+    setTimeout(() => setLoading(false), 1500);
   };
-
-  const isLoading = status === "fetching" || status === "translating";
 
   return (
     <div className="relative">
       <button
         type="button"
-        disabled={!enabled || isLoading}
+        disabled={!enabled}
         onClick={handleClick}
         className={`relative flex items-center gap-2 px-3 py-2 rounded-md ring-1 transition-all ${
           isActive
@@ -110,35 +57,20 @@ export function LanguageButton({
         } disabled:opacity-40 disabled:cursor-not-allowed`}
         aria-label="Toggle Turkish subtitles"
         title={
-          status === "fetching"
-            ? "Altyazı çekiliyor…"
-            : status === "translating"
-              ? "Türkçe'ye çevriliyor…"
-              : status === "error"
-                ? error ?? "Hata"
-                : "Türkçe altyazı (otomatik çeviri)"
+          isActive
+            ? "Türkçe altyazı açık — kapatmak için tıkla"
+            : "Türkçe altyazı (YouTube otomatik çeviri)"
         }
       >
-        {isLoading ? (
+        {loading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <TurkishFlagIcon className="w-5 h-5" />
         )}
         <span className="text-xs font-semibold hidden md:block">
-          {isActive
-            ? "TR · ON"
-            : status === "fetching"
-              ? "Çekiliyor…"
-              : status === "translating"
-                ? "Çevriliyor…"
-                : "TR"}
+          {isActive ? "TR · ON" : "TR"}
         </span>
       </button>
-      {status === "error" && error && (
-        <div className="absolute bottom-full mb-2 right-0 max-w-xs px-3 py-2 rounded bg-black/95 text-white text-xs ring-1 ring-red-500/40 shadow-lg">
-          {error}
-        </div>
-      )}
     </div>
   );
 }
@@ -166,5 +98,3 @@ export function TurkishFlagIcon({ className = "w-5 h-5" }: { className?: string 
     </svg>
   );
 }
-
-export type { SubtitleEntry };

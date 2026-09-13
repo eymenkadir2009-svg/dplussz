@@ -2,9 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
-/**
- * Minimal type declarations for the YouTube IFrame API.
- */
 declare global {
   interface Window {
     YT?: any;
@@ -21,6 +18,7 @@ export interface YouTubePlayerState {
   volume: number;
   muted: boolean;
   ended: boolean;
+  captionsEnabled: boolean;
 }
 
 export const initialPlayerState: YouTubePlayerState = {
@@ -32,6 +30,7 @@ export const initialPlayerState: YouTubePlayerState = {
   volume: 100,
   muted: false,
   ended: false,
+  captionsEnabled: false,
 };
 
 let apiPromise: Promise<void> | null = null;
@@ -64,7 +63,9 @@ export function useYouTubePlayer(
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [state, setState] = useState<YouTubePlayerState>(initialPlayerState);
 
-  // Initialise / re-initialise player when videoId changes
+  // Track pending caption request — applied once the captions module is ready
+  const pendingCaptionsRef = useRef<boolean>(false);
+
   useEffect(() => {
     if (!videoId) return;
     let disposed = false;
@@ -74,7 +75,6 @@ export function useYouTubePlayer(
       const YT = window.YT;
       if (!YT || !YT.Player) return;
 
-      // destroy any previous instance
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -98,9 +98,10 @@ export function useYouTubePlayer(
           fs: 0,
           disablekb: 1,
           playsinline: 1,
-          // No native captions — we render custom translated subtitles
-          // in our own SubtitleOverlay component.
-          cc_load_policy: 0,
+          // Load captions module on init — YouTube will auto-detect
+          // available caption tracks and we can enable auto-translation.
+          cc_load_policy: 1,
+          cc_lang_pref: "en",
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         events: {
@@ -114,6 +115,20 @@ export function useYouTubePlayer(
               volume: p.getVolume() ?? 100,
               muted: p.isMuted?.() ?? false,
             }));
+
+            // Hide captions initially — user enables via button
+            try {
+              p.loadModule?.("captions");
+              setTimeout(() => {
+                try {
+                  p.setOption("captions", "visibility", false);
+                } catch {
+                  /* ignore */
+                }
+              }, 800);
+            } catch {
+              /* ignore */
+            }
           },
           onStateChange: (e: any) => {
             const YTState = window.YT?.PlayerState;
@@ -126,6 +141,17 @@ export function useYouTubePlayer(
               ended: isEnded,
               duration: playerRef.current?.getDuration?.() || s.duration,
             }));
+
+            // When video starts playing, apply pending caption request
+            if (isPlaying && pendingCaptionsRef.current) {
+              setTimeout(() => applyCaptionTranslation(), 500);
+            }
+          },
+          onApiChange: () => {
+            // Captions module API is now available
+            if (pendingCaptionsRef.current) {
+              applyCaptionTranslation();
+            }
           },
           onPlaybackQualityChange: () => {},
           onError: () => {
@@ -135,7 +161,7 @@ export function useYouTubePlayer(
       });
     });
 
-    // Poll for time / buffered updates
+    // Poll for time/buffered updates
     intervalRef.current = setInterval(() => {
       const p = playerRef.current;
       if (!p || !p.getCurrentTime) return;
@@ -156,6 +182,41 @@ export function useYouTubePlayer(
       }));
     }, 250);
 
+    /**
+     * Apply YouTube native auto-translation to Turkish.
+     * Called from onApiChange, onReady, and onStateChange (PLAYING).
+     * Retries up to 10 times with 1s delays.
+     */
+    function applyCaptionTranslation(attempt = 0) {
+      const p = playerRef.current;
+      if (!p || disposed) return;
+
+      try {
+        // Load the captions module
+        p.loadModule?.("captions");
+
+        // Set the source caption track to English
+        p.setOption("captions", "track", { languageCode: "en" });
+
+        // Set auto-translation to Turkish — this is the key step!
+        // YouTube will translate the English captions to Turkish automatically.
+        p.setOption("captions", "translationLanguage", {
+          languageCode: "tr",
+          languageName: "Turkish",
+        });
+
+        // Make captions visible
+        p.setOption("captions", "visibility", true);
+
+        setState((s) => ({ ...s, captionsEnabled: true }));
+      } catch {
+        // Retry up to 10 times — the captions module may take time to load
+        if (attempt < 10 && !disposed) {
+          setTimeout(() => applyCaptionTranslation(attempt + 1), 1000);
+        }
+      }
+    }
+
     return () => {
       disposed = true;
       if (intervalRef.current) {
@@ -170,6 +231,7 @@ export function useYouTubePlayer(
         }
         playerRef.current = null;
       }
+      pendingCaptionsRef.current = false;
       setState(initialPlayerState);
     };
   }, [containerId, videoId]);
@@ -235,6 +297,47 @@ export function useYouTubePlayer(
     }
   }, []);
 
+  /**
+   * Enable YouTube native captions with auto-translation to Turkish.
+   * Sets the pending flag — the actual caption settings are applied
+   * by applyCaptionTranslation() which is called from onApiChange,
+   * onReady, and onStateChange (PLAYING).
+   */
+  const enableCaptions = useCallback(() => {
+    pendingCaptionsRef.current = true;
+    // Try immediately
+    const p = playerRef.current;
+    if (p) {
+      try {
+        p.loadModule?.("captions");
+        p.setOption("captions", "track", { languageCode: "en" });
+        p.setOption("captions", "translationLanguage", {
+          languageCode: "tr",
+          languageName: "Turkish",
+        });
+        p.setOption("captions", "visibility", true);
+        setState((s) => ({ ...s, captionsEnabled: true }));
+      } catch {
+        /* will be retried by onApiChange/onStateChange */
+      }
+    }
+  }, []);
+
+  /**
+   * Disable YouTube native captions.
+   */
+  const disableCaptions = useCallback(() => {
+    pendingCaptionsRef.current = false;
+    const p = playerRef.current;
+    if (!p) return;
+    try {
+      p.setOption("captions", "visibility", false);
+      setState((s) => ({ ...s, captionsEnabled: false }));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   return {
     state,
     play,
@@ -242,5 +345,7 @@ export function useYouTubePlayer(
     seek,
     setVolume,
     toggleMute,
+    enableCaptions,
+    disableCaptions,
   };
 }
