@@ -109,10 +109,11 @@ export function useYouTubePlayer(
           fs: 0,
           disablekb: 1,
           playsinline: 1,
-          // Allow captions to be loaded — we control visibility via the API.
-          // Without cc_load_policy=1, the captions module may not initialize.
-          cc_load_policy: 1,
-          cc_lang_pref: "en",
+          // Don't auto-load captions — we control them via the Language button.
+          // cc_load_policy=1 would force English captions to show immediately
+          // and the translationLanguage setting might not override them.
+          cc_load_policy: 0,
+          cc_lang_pref: "tr", // Prefer Turkish for caption translation
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         events: {
@@ -195,11 +196,16 @@ export function useYouTubePlayer(
                 // Apply pending caption request
                 const pending = pendingCaptionsRef.current;
                 if (pending) {
-                  pendingCaptionsRef.current = null;
+                  // Don't clear the ref here — we want to re-apply on each
+                  // onApiChange event in case YouTube resets the caption settings.
                   try {
+                    // Step 1: Set the source track language
                     p.setOption("captions", "track", {
                       languageCode: pending.lang,
                     });
+
+                    // Step 2: Set translation language to Turkish
+                    // YouTube's API expects {languageCode, languageName} object
                     if (pending.translateTo) {
                       p.setOption("captions", "translationLanguage", {
                         languageCode: pending.translateTo,
@@ -209,6 +215,8 @@ export function useYouTubePlayer(
                             : pending.translateTo,
                       });
                     }
+
+                    // Step 3: Make captions visible
                     p.setOption("captions", "visibility", true);
                     setState((s) => ({ ...s, captionsEnabled: true }));
                   } catch {
@@ -330,10 +338,11 @@ export function useYouTubePlayer(
   }, []);
 
   /**
-   * Enable YouTube native captions with auto-translation.
+   * Enable YouTube native captions with auto-translation to Turkish.
    *
    * Tries multiple times with delays because the captions module may not
-   * be immediately available after onReady.
+   * be immediately available after onReady. Also relies on the onApiChange
+   * event handler to re-apply settings if YouTube resets them.
    */
   const enableCaptions = useCallback(
     (lang: string, translateTo?: string) => {
@@ -341,13 +350,19 @@ export function useYouTubePlayer(
       if (!p) return;
 
       // Store the request so onApiChange can apply it if the module
-      // isn't ready yet.
+      // isn't ready yet. We keep it stored (don't clear) so it gets
+      // re-applied on every onApiChange event.
       pendingCaptionsRef.current = { lang, translateTo };
 
       const applyCaptions = (attempt: number) => {
         try {
+          // Load the captions module
           p.loadModule?.("captions");
+
+          // Set the source caption track
           p.setOption("captions", "track", { languageCode: lang });
+
+          // Set the translation language to Turkish
           if (translateTo) {
             p.setOption("captions", "translationLanguage", {
               languageCode: translateTo,
@@ -355,11 +370,17 @@ export function useYouTubePlayer(
                 translateTo === "tr" ? "Turkish" : translateTo,
             });
           }
+
+          // Make captions visible
           p.setOption("captions", "visibility", true);
-          setState((s) => ({ ...s, captionsEnabled: true, captionsReady: true }));
+          setState((s) => ({
+            ...s,
+            captionsEnabled: true,
+            captionsReady: true,
+          }));
         } catch {
-          // Retry up to 3 times with increasing delays
-          if (attempt < 3) {
+          // Retry up to 5 times with increasing delays
+          if (attempt < 5) {
             setTimeout(() => applyCaptions(attempt + 1), 1000 * (attempt + 1));
           }
         }
