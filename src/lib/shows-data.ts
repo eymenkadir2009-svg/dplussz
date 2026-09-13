@@ -964,6 +964,32 @@ export const SHOW_MOVIES: Movie[] = [
     playlistId: `pl-yt-show-3`,
     youtubePlaylistId: `PLD7nPL1U-R5qd19uN5dyGGOyE528rgB6y`,
   },
+  {
+    id: `yt-show-4`,
+    title: `The Charlotte Show`,
+    poster: `https://static.episodate.com/images/tv-show/full/62712.jpg`,
+    backdrop: `https://static.episodate.com/images/tv-show/full/62712.jpg`,
+    year: 2018,
+    rating: `TV-14`,
+    duration: `1 Season`,
+    genres: ["Reality", "Drama"],
+    description: `The Charlotte Show — YouTube playlist. Bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-4`,
+    youtubePlaylistId: `PLcD7YRL9U84Q`,
+  },
+  {
+    id: `yt-show-5`,
+    title: `Teen Mom Australia`,
+    poster: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-wZ2ewY4Smtnxbu2FuSCtOJKUWreM9pTpxRBzW-fMJg&s=10`,
+    backdrop: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-wZ2ewY4Smtnxbu2FuSCtOJKUWreM9pTpxRBzW-fMJg&s=10`,
+    year: 2019,
+    rating: `TV-14`,
+    duration: `1 Season`,
+    genres: ["Reality", "Drama"],
+    description: `Teen Mom Australia — YouTube show. Bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-5`,
+    youtubePlaylistId: `PLI7JwFmvRkJQ`,
+  },
 ];
 
 export const SHOW_PLAYLISTS: Playlist[] = [
@@ -1393,6 +1419,18 @@ export const SHOW_PLAYLISTS: Playlist[] = [
     description: `YouTube playlist — episodes loaded from playlist.`,
     episodes: makeEpisodes(`yt-show-3`, `Roast Best Of Compilations`, 30, `https://m.media-amazon.com/images/S/pv-target-images/ca04e565c9a88486edc501ff81c7dc67b935cf2c5e5bf7493660a11bc2d73f1d._UR2000,3000_CLs%7C2000,3000%7C/G/bundle/BottomRightCardGradient2x3.png,/G/01/digital/video/merch/subs/benefit-id/a-f/cbsaacf/logos/channels-logo-white-stacked.png%7C0,0,2000,3000+0,0,2000,3000+1426,2798,487,115_kv4600e6e6b6650a7b1b1d469e8b864fb4_SX750_FMjpg_.jpg`),
   },
+  {
+    id: `pl-yt-show-4`,
+    title: `The Charlotte Show — Season 1`,
+    description: `YouTube playlist — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-4`, `The Charlotte Show`, 30, `https://static.episodate.com/images/tv-show/full/62712.jpg`),
+  },
+  {
+    id: `pl-yt-show-5`,
+    title: `Teen Mom Australia — Season 1`,
+    description: `YouTube show — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-5`, `Teen Mom Australia`, 30, `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-wZ2ewY4Smtnxbu2FuSCtOJKUWreM9pTpxRBzW-fMJg&s=10`),
+  },
 ];
 
 export const SHOW_CATEGORIES: MovieCategory[] = [
@@ -1404,7 +1442,7 @@ export const SHOW_CATEGORIES: MovieCategory[] = [
   {
     id: "popular-tv-series",
     title: "Popular TV Series",
-    movies: [SHOW_MOVIES[68], SHOW_MOVIES[69], SHOW_MOVIES[70]],
+    movies: [SHOW_MOVIES[68], SHOW_MOVIES[69], SHOW_MOVIES[70], SHOW_MOVIES[71], SHOW_MOVIES[72]],
   },
   {
     id: `komedi`,
