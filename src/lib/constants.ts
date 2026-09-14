@@ -1,7 +1,7 @@
 export const SITE = {
   name: "Goothiah TV",
   logoUrl:
-    "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/df08fb9e3d5a3c624d9f0e9a372256da/Goothiah-1.png",
+    "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/1a6555bcf5f72a1c43ad29a08e449432/Goothiah-removebg-preview-1.png",
   tagline: "Stream the stories you love.",
 };
 
