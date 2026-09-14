@@ -635,6 +635,30 @@ export const SHOW_MOVIES: Movie[] = [
     playlistId: `pl-yt-show-12`,
     youtubePlaylistId: `PLOA8H8Jl1whxOIO3AAvWRXUbeA5Y0bNx5`,
   },
+  {id: `yt-show-13`,
+    title: `Just Keep Watching`,
+    poster: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9gfTUpg6uEaJ5f-dbI5JmWNps0wm3ijDhrxkTsjSyNG89Zh6hbQLaE0&s=10`,
+    backdrop: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9gfTUpg6uEaJ5f-dbI5JmWNps0wm3ijDhrxkTsjSyNG89Zh6hbQLaE0&s=10`,
+    year: 2024,
+    rating: `TV-14`,
+    duration: `1 Season`,
+    genres: ["Reality", "Macera"],
+    description: `Just Keep Watching — YouTube show. Bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-13`,
+    youtubePlaylistId: `PLdEipTmzqnN8`,
+  },
+  {id: `yt-show-14`,
+    title: `Pirates Inc`,
+    poster: `https://m.media-amazon.com/images/M/MV5BZjZmZWQxYTQtMGVmOC00NTZiLTk5NTctMDA3NTE2NmI1MDA4XkEyXkFqcGc@._V1_.jpg`,
+    backdrop: `https://m.media-amazon.com/images/M/MV5BZjZmZWQxYTQtMGVmOC00NTZiLTk5NTctMDA3NTE2NmI1MDA4XkEyXkFqcGc@._V1_.jpg`,
+    year: 2024,
+    rating: `TV-14`,
+    duration: `1 Season`,
+    genres: ["Macera", "Komedi"],
+    description: `Pirates Inc — YouTube show. Bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-14`,
+    youtubePlaylistId: `PLXyOyZEVB9WE`,
+  },
 ];
 
 export const SHOW_PLAYLISTS: Playlist[] = [
@@ -908,6 +932,16 @@ export const SHOW_PLAYLISTS: Playlist[] = [
     description: `YouTube playlist — episodes loaded from playlist.`,
     episodes: makeEpisodes(`yt-show-12`, `Who Wants to Be a Millionaire?`, 30, `https://m.media-amazon.com/images/M/MV5BNzk5ZDhlMDMtYzM1ZS00NzBlLWJiZjMtZDYxNTc5NGQzMTI5XkEyXkFqcGc@._V1_.jpg`),
   },
+  {id: `pl-yt-show-13`,
+    title: `Just Keep Watching — Season 1`,
+    description: `YouTube show — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-13`, `Just Keep Watching`, 30, `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg9gfTUpg6uEaJ5f-dbI5JmWNps0wm3ijDhrxkTsjSyNG89Zh6hbQLaE0&s=10`),
+  },
+  {id: `pl-yt-show-14`,
+    title: `Pirates Inc — Season 1`,
+    description: `YouTube show — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-14`, `Pirates Inc`, 30, `https://m.media-amazon.com/images/M/MV5BZjZmZWQxYTQtMGVmOC00NTZiLTk5NTctMDA3NTE2NmI1MDA4XkEyXkFqcGc@._V1_.jpg`),
+  },
 ];
 
 export const SHOW_CATEGORIES: MovieCategory[] = [
@@ -919,7 +953,7 @@ export const SHOW_CATEGORIES: MovieCategory[] = [
   {
     id: "popular-tv-series",
     title: "Popular TV Series",
-    movies: [SHOW_MOVIES[35], SHOW_MOVIES[36], SHOW_MOVIES[37], SHOW_MOVIES[38], SHOW_MOVIES[39], SHOW_MOVIES[40], SHOW_MOVIES[41], SHOW_MOVIES[42], SHOW_MOVIES[43], SHOW_MOVIES[44], SHOW_MOVIES[45], SHOW_MOVIES[46]],
+    movies: [SHOW_MOVIES[35], SHOW_MOVIES[36], SHOW_MOVIES[37], SHOW_MOVIES[38], SHOW_MOVIES[39], SHOW_MOVIES[40], SHOW_MOVIES[41], SHOW_MOVIES[42], SHOW_MOVIES[43], SHOW_MOVIES[44], SHOW_MOVIES[45], SHOW_MOVIES[46], SHOW_MOVIES[47], SHOW_MOVIES[48]],
   },
   {
     id: "talk-show",
