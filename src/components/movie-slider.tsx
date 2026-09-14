@@ -73,7 +73,7 @@ export function MovieSlider({ id, title, movies }: MovieSliderProps) {
         {/* Cards row */}
         <div
           ref={scrollRef}
-          className="no-scrollbar smooth-scroll flex gap-3 overflow-x-auto px-4 md:px-10 pb-2 pt-1"
+          className="no-scrollbar smooth-scroll flex gap-2 sm:gap-3 md:gap-4 overflow-x-auto px-4 md:px-10 pb-2 pt-1"
           style={{ scrollbarWidth: "none" }}
         >
           {movies.map((m, idx) => (

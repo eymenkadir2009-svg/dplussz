@@ -50,7 +50,13 @@ export function LanguageButton({
         type="button"
         disabled={!enabled}
         onClick={handleClick}
-        className={`relative flex items-center gap-2 px-3 py-2 rounded-md ring-1 transition-all ${
+        onTouchStart={(e) => {
+          // Prevent double-firing on mobile (touch + click)
+          e.preventDefault();
+          handleClick();
+        }}
+        style={{ WebkitTapHighlightColor: "transparent" }}
+        className={`relative flex items-center gap-2 px-2.5 py-2 sm:px-3 rounded-md ring-1 transition-all touch-manipulation ${
           isActive
             ? "bg-white text-black ring-white"
             : "bg-black/60 text-white ring-white/30 hover:bg-black/80 hover:ring-white/60"
@@ -67,7 +73,7 @@ export function LanguageButton({
         ) : (
           <TurkishFlagIcon className="w-5 h-5" />
         )}
-        <span className="text-xs font-semibold hidden md:block">
+        <span className="text-xs font-semibold hidden sm:block">
           {isActive ? "TR · ON" : "TR"}
         </span>
       </button>

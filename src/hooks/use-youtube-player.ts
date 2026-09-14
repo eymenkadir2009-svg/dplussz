@@ -66,6 +66,54 @@ export function useYouTubePlayer(
   // Track pending caption request — applied once the captions module is ready
   const pendingCaptionsRef = useRef<boolean>(false);
 
+  /**
+   * Apply YouTube native auto-translation to Turkish.
+   * This is defined with useCallback so it's accessible from both
+   * the event handlers (onApiChange, onStateChange) and the
+   * enableCaptions() method.
+   *
+   * Retries up to 15 times with 800ms delays — the captions module
+   * can take several seconds to load, especially on mobile.
+   */
+  const applyCaptionTranslation = useCallback(() => {
+    const p = playerRef.current;
+    if (!p) return;
+
+    let attempt = 0;
+
+    function tryApply() {
+      const pp = playerRef.current;
+      if (!pp) return;
+
+      try {
+        // Load the captions module
+        pp.loadModule?.("captions");
+
+        // Set the source caption track to English
+        pp.setOption("captions", "track", { languageCode: "en" });
+
+        // Set auto-translation to Turkish
+        pp.setOption("captions", "translationLanguage", {
+          languageCode: "tr",
+          languageName: "Turkish",
+        });
+
+        // Make captions visible
+        pp.setOption("captions", "visibility", true);
+
+        setState((s) => ({ ...s, captionsEnabled: true }));
+      } catch {
+        // Retry up to 15 times with 800ms delays
+        attempt++;
+        if (attempt <= 15) {
+          setTimeout(tryApply, 800);
+        }
+      }
+    }
+
+    tryApply();
+  }, []);
+
   useEffect(() => {
     if (!videoId) return;
     let disposed = false;
@@ -98,8 +146,7 @@ export function useYouTubePlayer(
           fs: 0,
           disablekb: 1,
           playsinline: 1,
-          // Load captions module on init — YouTube will auto-detect
-          // available caption tracks and we can enable auto-translation.
+          // Load captions module on init
           cc_load_policy: 1,
           cc_lang_pref: "en",
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
@@ -116,9 +163,10 @@ export function useYouTubePlayer(
               muted: p.isMuted?.() ?? false,
             }));
 
-            // Hide captions initially — user enables via button
+            // Pre-load captions module so it's ready when user clicks the button
             try {
               p.loadModule?.("captions");
+              // Hide captions initially
               setTimeout(() => {
                 try {
                   p.setOption("captions", "visibility", false);
@@ -128,6 +176,11 @@ export function useYouTubePlayer(
               }, 800);
             } catch {
               /* ignore */
+            }
+
+            // Apply pending caption request if one was queued
+            if (pendingCaptionsRef.current) {
+              setTimeout(() => applyCaptionTranslation(), 1000);
             }
           },
           onStateChange: (e: any) => {
@@ -142,13 +195,15 @@ export function useYouTubePlayer(
               duration: playerRef.current?.getDuration?.() || s.duration,
             }));
 
-            // When video starts playing, apply pending caption request
+            // When video starts playing, apply pending caption request.
+            // This is especially important on mobile where the captions
+            // module loads later than on desktop.
             if (isPlaying && pendingCaptionsRef.current) {
               setTimeout(() => applyCaptionTranslation(), 500);
             }
           },
           onApiChange: () => {
-            // Captions module API is now available
+            // Captions module API is now available — apply pending request
             if (pendingCaptionsRef.current) {
               applyCaptionTranslation();
             }
@@ -182,41 +237,6 @@ export function useYouTubePlayer(
       }));
     }, 250);
 
-    /**
-     * Apply YouTube native auto-translation to Turkish.
-     * Called from onApiChange, onReady, and onStateChange (PLAYING).
-     * Retries up to 10 times with 1s delays.
-     */
-    function applyCaptionTranslation(attempt = 0) {
-      const p = playerRef.current;
-      if (!p || disposed) return;
-
-      try {
-        // Load the captions module
-        p.loadModule?.("captions");
-
-        // Set the source caption track to English
-        p.setOption("captions", "track", { languageCode: "en" });
-
-        // Set auto-translation to Turkish — this is the key step!
-        // YouTube will translate the English captions to Turkish automatically.
-        p.setOption("captions", "translationLanguage", {
-          languageCode: "tr",
-          languageName: "Turkish",
-        });
-
-        // Make captions visible
-        p.setOption("captions", "visibility", true);
-
-        setState((s) => ({ ...s, captionsEnabled: true }));
-      } catch {
-        // Retry up to 10 times — the captions module may take time to load
-        if (attempt < 10 && !disposed) {
-          setTimeout(() => applyCaptionTranslation(attempt + 1), 1000);
-        }
-      }
-    }
-
     return () => {
       disposed = true;
       if (intervalRef.current) {
@@ -234,7 +254,7 @@ export function useYouTubePlayer(
       pendingCaptionsRef.current = false;
       setState(initialPlayerState);
     };
-  }, [containerId, videoId]);
+  }, [containerId, videoId, applyCaptionTranslation]);
 
   const play = useCallback(() => {
     const p = playerRef.current;
@@ -299,29 +319,22 @@ export function useYouTubePlayer(
 
   /**
    * Enable YouTube native captions with auto-translation to Turkish.
-   * Sets the pending flag — the actual caption settings are applied
-   * by applyCaptionTranslation() which is called from onApiChange,
-   * onReady, and onStateChange (PLAYING).
+   * Sets the pending flag and calls applyCaptionTranslation() which
+   * retries up to 15 times — the captions module may take several
+   * seconds to load, especially on mobile devices.
    */
   const enableCaptions = useCallback(() => {
     pendingCaptionsRef.current = true;
     // Try immediately
-    const p = playerRef.current;
-    if (p) {
-      try {
-        p.loadModule?.("captions");
-        p.setOption("captions", "track", { languageCode: "en" });
-        p.setOption("captions", "translationLanguage", {
-          languageCode: "tr",
-          languageName: "Turkish",
-        });
-        p.setOption("captions", "visibility", true);
-        setState((s) => ({ ...s, captionsEnabled: true }));
-      } catch {
-        /* will be retried by onApiChange/onStateChange */
-      }
-    }
-  }, []);
+    applyCaptionTranslation();
+    // Also try after 2s and 5s in case the module loads late
+    setTimeout(() => {
+      if (pendingCaptionsRef.current) applyCaptionTranslation();
+    }, 2000);
+    setTimeout(() => {
+      if (pendingCaptionsRef.current) applyCaptionTranslation();
+    }, 5000);
+  }, [applyCaptionTranslation]);
 
   /**
    * Disable YouTube native captions.
