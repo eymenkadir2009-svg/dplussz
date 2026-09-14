@@ -1,0 +1,66 @@
+{
+  "name": "Goothiah TV",
+  "short_name": "Goothiah",
+  "description": "Stream the stories you love — premium streaming with Goothiah TV.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["entertainment", "video", "media"],
+  "icons": [
+    {
+      "src": "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/df08fb9e3d5a3c624d9f0e9a372256da/Goothiah-1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/df08fb9e3d5a3c624d9f0e9a372256da/Goothiah-1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/df08fb9e3d5a3c624d9f0e9a372256da/Goothiah-1.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/df08fb9e3d5a3c624d9f0e9a372256da/Goothiah-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home",
+      "url": "/",
+      "icons": [
+        {
+          "src": "https://wad.nyc3.digitaloceanspaces.com/yourfiles/uploads/df08fb9e3d5a3c624d9f0e9a372256da/Goothiah-1.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Trending",
+      "url": "/#trending"
+    },
+    {
+      "name": "Popular TV Series",
+      "url": "/#popular-tv-series"
+    },
+    {
+      "name": "Talk Show",
+      "url": "/#talk-show"
+    }
+  ]
+}

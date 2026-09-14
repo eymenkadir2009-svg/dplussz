@@ -8,6 +8,7 @@ import { usePlaylistCache } from "@/hooks/use-playlist-cache";
 import { PlayerControls } from "@/components/player-controls";
 import { getMovieById } from "@/lib/data";
 import { Episode } from "@/lib/types";
+import { formatTime } from "@/lib/constants";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ArrowLeft, ChevronRight, Loader2, Play } from "lucide-react";
@@ -289,6 +290,13 @@ export default function WatchClient() {
                   ? `Bölüm ${currentIndex + 1}${playlistEps ? ` / ${playlistEps.length}` : ""}`
                   : movie.title}
               </p>
+              {/* Resume indicator */}
+              {state.resumed && (
+                <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400" />
+                  Kaldığınız yerden devam ediliyor ({formatTime(state.currentTime)})
+                </p>
+              )}
             </div>
 
             {nextEpisode && (

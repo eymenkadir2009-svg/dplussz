@@ -19,6 +19,8 @@ export interface YouTubePlayerState {
   muted: boolean;
   ended: boolean;
   captionsEnabled: boolean;
+  /** Whether the player has seeked to the saved resume position. */
+  resumed: boolean;
 }
 
 export const initialPlayerState: YouTubePlayerState = {
@@ -31,6 +33,7 @@ export const initialPlayerState: YouTubePlayerState = {
   muted: false,
   ended: false,
   captionsEnabled: false,
+  resumed: false,
 };
 
 let apiPromise: Promise<void> | null = null;
@@ -53,6 +56,56 @@ function loadYouTubeAPI(): Promise<void> {
   });
 
   return apiPromise;
+}
+
+/**
+ * Save the current playback position to localStorage so the user can
+ * resume from where they left off on their next visit.
+ *
+ * Key format: `gtv-resume:${videoId}` → number (seconds)
+ *
+ * We only save if the position is > 5 seconds (skip intros) and
+ * < 95% of the duration (don't resume at the end).
+ */
+const RESUME_PREFIX = "gtv-resume:";
+const RESUME_SAVE_INTERVAL = 5000; // save every 5 seconds
+
+function saveResumePosition(videoId: string, currentTime: number, duration: number) {
+  if (typeof window === "undefined") return;
+  if (!videoId || !duration) return;
+  // Don't save if we're at the very beginning or near the end
+  if (currentTime < 5) return;
+  if (duration > 0 && currentTime / duration > 0.95) {
+    // Video is basically done — clear the saved position
+    window.localStorage.removeItem(RESUME_PREFIX + videoId);
+    return;
+  }
+  try {
+    window.localStorage.setItem(RESUME_PREFIX + videoId, String(Math.floor(currentTime)));
+  } catch {
+    /* localStorage might be full or disabled */
+  }
+}
+
+function loadResumePosition(videoId: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = window.localStorage.getItem(RESUME_PREFIX + videoId);
+    if (!raw) return 0;
+    const seconds = parseFloat(raw);
+    return isFinite(seconds) && seconds > 0 ? seconds : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function clearResumePosition(videoId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(RESUME_PREFIX + videoId);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function useYouTubePlayer(
@@ -155,13 +208,31 @@ export function useYouTubePlayer(
           onReady: (e: any) => {
             if (disposed) return;
             const p = e.target;
+            const dur = p.getDuration() || 0;
             setState((s) => ({
               ...s,
               ready: true,
-              duration: p.getDuration() || 0,
+              duration: dur,
               volume: p.getVolume() ?? 100,
               muted: p.isMuted?.() ?? false,
             }));
+
+            // --- Resume from saved position ---
+            // Read the saved playback position from localStorage and seek to it.
+            // This lets users continue watching from where they left off.
+            const savedPos = loadResumePosition(videoId);
+            if (savedPos > 5 && dur > 0 && savedPos < dur * 0.95) {
+              try {
+                p.seekTo?.(savedPos, true);
+                setState((s) => ({
+                  ...s,
+                  currentTime: savedPos,
+                  resumed: true,
+                }));
+              } catch {
+                /* ignore */
+              }
+            }
 
             // Pre-load captions module so it's ready when user clicks the button
             try {
@@ -216,7 +287,8 @@ export function useYouTubePlayer(
       });
     });
 
-    // Poll for time/buffered updates
+    // Poll for time/buffered updates + save resume position
+    let lastSaveTime = 0;
     intervalRef.current = setInterval(() => {
       const p = playerRef.current;
       if (!p || !p.getCurrentTime) return;
@@ -235,10 +307,32 @@ export function useYouTubePlayer(
         duration: dur || s.duration,
         buffered,
       }));
+
+      // Save resume position every 5 seconds (or when near the end)
+      const now = Date.now();
+      if (now - lastSaveTime >= RESUME_SAVE_INTERVAL) {
+        lastSaveTime = now;
+        saveResumePosition(videoId, ct, dur);
+      }
+      // Also save immediately if the video ended
+      if (dur > 0 && ct / dur > 0.95) {
+        clearResumePosition(videoId);
+      }
     }, 250);
 
     return () => {
       disposed = true;
+      // Save final position before unmounting
+      const p = playerRef.current;
+      if (p && p.getCurrentTime && videoId) {
+        try {
+          const ct = p.getCurrentTime() || 0;
+          const dur = p.getDuration() || 0;
+          saveResumePosition(videoId, ct, dur);
+        } catch {
+          /* ignore */
+        }
+      }
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
