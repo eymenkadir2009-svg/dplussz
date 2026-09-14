@@ -112,20 +112,61 @@ export default function WatchClient() {
     disableCaptions,
   } = useYouTubePlayer("yt-player-mount", currentYtId);
 
-  // Fullscreen
+  // Fullscreen + auto-rotate to landscape on mobile PWA
   useEffect(() => {
-    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    const onFs = async () => {
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      // Lock orientation to landscape when entering fullscreen
+      // (PWA + mobile only — desktop ignores this silently)
+      if (isFs) {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock("landscape");
+          }
+        } catch {
+          /* iOS Safari doesn't support orientation lock — user must rotate manually */
+        }
+      } else {
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    };
     document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
+    // Also listen for webkitfullscreenchange for iOS Safari
+    document.addEventListener("webkitfullscreenchange", onFs as any);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFs);
+      document.removeEventListener("webkitfullscreenchange", onFs as any);
+    };
   }, []);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
     if (!document.fullscreenElement) {
-      el.requestFullscreen?.().catch(() => {});
+      // Enter fullscreen — use webkitRequestFullscreen for iOS Safari
+      const reqFs =
+        el.requestFullscreen?.() ??
+        (el as any).webkitRequestFullscreen?.() ??
+        (el as any).webkitEnterFullscreen?.();
+      if (reqFs && typeof reqFs.catch === "function") {
+        reqFs.catch(() => {});
+      }
     } else {
-      document.exitFullscreen?.().catch(() => {});
+      // Exit fullscreen
+      const exitFs =
+        document.exitFullscreen?.() ??
+        (document as any).webkitExitFullscreen?.() ??
+        (document as any).webkitCancelFullscreen?.();
+      if (exitFs && typeof exitFs.catch === "function") {
+        exitFs.catch(() => {});
+      }
     }
   }, []);
 
