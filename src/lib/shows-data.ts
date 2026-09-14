@@ -611,6 +611,18 @@ export const SHOW_MOVIES: Movie[] = [
     playlistId: `pl-yt-show-10`,
     youtubePlaylistId: `PLF-BDTAHX0p5fVi7dtN6PDI1su-ImJI54`,
   },
+  {id: `yt-show-11`,
+    title: `Bloomberg Radio`,
+    poster: `https://imgsrv-sxm-prod-device.streaming.siriusxm.com/eyJrZXkiOiJhZW0vNTUvNTUxNGI3ZmEwZjNiNWJlZTEwZmVmMzRhMGVlMjUxMmRfMTcyNDg2NjEwNS5wbmciLCJlZGl0cyI6W3siZm9ybWF0Ijp7InR5cGUiOiJqcGVnIn19LHsicmVzaXplIjp7IndpZHRoIjozMTksImhlaWdodCI6MzE5fX1dfQ==`,
+    backdrop: `https://imgsrv-sxm-prod-device.streaming.siriusxm.com/eyJrZXkiOiJhZW0vNTUvNTUxNGI3ZmEwZjNiNWJlZTEwZmVmMzRhMGVlMjUxMmRfMTcyNDg2NjEwNS5wbmciLCJlZGl0cyI6W3siZm9ybWF0Ijp7InR5cGUiOiJqcGVnIn19LHsicmVzaXplIjp7IndpZHRoIjozMTksImhlaWdodCI6MzE5fX1dfQ==`,
+    year: 2024,
+    rating: `TV-PG`,
+    duration: `1 Season`,
+    genres: ["News", "Finans"],
+    description: `Bloomberg Radio — YouTube playlist. Canlı finans ve haber içerikleri.`,
+    playlistId: `pl-yt-show-11`,
+    youtubePlaylistId: `PLGaYlBJIOoa_UtErnnm27vEY_lk97A745`,
+  },
 ];
 
 export const SHOW_PLAYLISTS: Playlist[] = [
@@ -874,6 +886,11 @@ export const SHOW_PLAYLISTS: Playlist[] = [
     description: `YouTube show — episodes loaded from playlist.`,
     episodes: makeEpisodes(`yt-show-10`, `America's Got Talent`, 30, `https://image.tmdb.org/t/p/original/xyd4aV6LZ8dcj1etoMLroUxzFDf.jpg`),
   },
+  {id: `pl-yt-show-11`,
+    title: `Bloomberg Radio — Season 1`,
+    description: `YouTube playlist — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-11`, `Bloomberg Radio`, 30, `https://imgsrv-sxm-prod-device.streaming.siriusxm.com/eyJrZXkiOiJhZW0vNTUvNTUxNGI3ZmEwZjNiNWJlZTEwZmVmMzRhMGVlMjUxMmRfMTcyNDg2NjEwNS5wbmciLCJlZGl0cyI6W3siZm9ybWF0Ijp7InR5cGUiOiJqcGVnIn19LHsicmVzaXplIjp7IndpZHRoIjozMTksImhlaWdodCI6MzE5fX1dfQ==`),
+  },
 ];
 
 export const SHOW_CATEGORIES: MovieCategory[] = [
@@ -885,12 +902,17 @@ export const SHOW_CATEGORIES: MovieCategory[] = [
   {
     id: "popular-tv-series",
     title: "Popular TV Series",
-    movies: [SHOW_MOVIES[35], SHOW_MOVIES[36], SHOW_MOVIES[37], SHOW_MOVIES[38], SHOW_MOVIES[39], SHOW_MOVIES[40], SHOW_MOVIES[41], SHOW_MOVIES[42], SHOW_MOVIES[43], SHOW_MOVIES[44]],
+    movies: [SHOW_MOVIES[35], SHOW_MOVIES[36], SHOW_MOVIES[37], SHOW_MOVIES[38], SHOW_MOVIES[39], SHOW_MOVIES[40], SHOW_MOVIES[41], SHOW_MOVIES[42], SHOW_MOVIES[43], SHOW_MOVIES[44], SHOW_MOVIES[45]],
   },
   {
     id: "talk-show",
     title: "Talk Show",
     movies: [SHOW_MOVIES[42], SHOW_MOVIES[43]],
+  },
+  {
+    id: "today-news",
+    title: "Today, News",
+    movies: [SHOW_MOVIES[45]],
   },
   {
     id: `komedi`,

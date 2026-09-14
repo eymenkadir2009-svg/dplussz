@@ -38,6 +38,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cizgimax.online" },
       { protocol: "https", hostname: "mediaproxy.tvtropes.org" },
       { protocol: "https", hostname: "occ-0-55-56.1.nflxso.net" },
+      { protocol: "https", hostname: "imgsrv-sxm-prod-device.streaming.siriusxm.com" },
     ],
   },
 };
