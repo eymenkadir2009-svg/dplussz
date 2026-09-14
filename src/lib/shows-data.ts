@@ -623,6 +623,18 @@ export const SHOW_MOVIES: Movie[] = [
     playlistId: `pl-yt-show-11`,
     youtubePlaylistId: `PLGaYlBJIOoa_UtErnnm27vEY_lk97A745`,
   },
+  {id: `yt-show-12`,
+    title: `Who Wants to Be a Millionaire?`,
+    poster: `https://m.media-amazon.com/images/M/MV5BNzk5ZDhlMDMtYzM1ZS00NzBlLWJiZjMtZDYxNTc5NGQzMTI5XkEyXkFqcGc@._V1_.jpg`,
+    backdrop: `https://m.media-amazon.com/images/M/MV5BNzk5ZDhlMDMtYzM1ZS00NzBlLWJiZjMtZDYxNTc5NGQzMTI5XkEyXkFqcGc@._V1_.jpg`,
+    year: 1999,
+    rating: `TV-PG`,
+    duration: `1 Season`,
+    genres: ["Yarışma", "Bilgi"],
+    description: `Who Wants to Be a Millionaire? — YouTube playlist. Bölüm listesi playlist'ten otomatik yüklenir.`,
+    playlistId: `pl-yt-show-12`,
+    youtubePlaylistId: `PLOA8H8Jl1whxOIO3AAvWRXUbeA5Y0bNx5`,
+  },
 ];
 
 export const SHOW_PLAYLISTS: Playlist[] = [
@@ -891,6 +903,11 @@ export const SHOW_PLAYLISTS: Playlist[] = [
     description: `YouTube playlist — episodes loaded from playlist.`,
     episodes: makeEpisodes(`yt-show-11`, `Bloomberg Radio`, 30, `https://imgsrv-sxm-prod-device.streaming.siriusxm.com/eyJrZXkiOiJhZW0vNTUvNTUxNGI3ZmEwZjNiNWJlZTEwZmVmMzRhMGVlMjUxMmRfMTcyNDg2NjEwNS5wbmciLCJlZGl0cyI6W3siZm9ybWF0Ijp7InR5cGUiOiJqcGVnIn19LHsicmVzaXplIjp7IndpZHRoIjozMTksImhlaWdodCI6MzE5fX1dfQ==`),
   },
+  {id: `pl-yt-show-12`,
+    title: `Who Wants to Be a Millionaire? — Season 1`,
+    description: `YouTube playlist — episodes loaded from playlist.`,
+    episodes: makeEpisodes(`yt-show-12`, `Who Wants to Be a Millionaire?`, 30, `https://m.media-amazon.com/images/M/MV5BNzk5ZDhlMDMtYzM1ZS00NzBlLWJiZjMtZDYxNTc5NGQzMTI5XkEyXkFqcGc@._V1_.jpg`),
+  },
 ];
 
 export const SHOW_CATEGORIES: MovieCategory[] = [
@@ -902,7 +919,7 @@ export const SHOW_CATEGORIES: MovieCategory[] = [
   {
     id: "popular-tv-series",
     title: "Popular TV Series",
-    movies: [SHOW_MOVIES[35], SHOW_MOVIES[36], SHOW_MOVIES[37], SHOW_MOVIES[38], SHOW_MOVIES[39], SHOW_MOVIES[40], SHOW_MOVIES[41], SHOW_MOVIES[42], SHOW_MOVIES[43], SHOW_MOVIES[44], SHOW_MOVIES[45]],
+    movies: [SHOW_MOVIES[35], SHOW_MOVIES[36], SHOW_MOVIES[37], SHOW_MOVIES[38], SHOW_MOVIES[39], SHOW_MOVIES[40], SHOW_MOVIES[41], SHOW_MOVIES[42], SHOW_MOVIES[43], SHOW_MOVIES[44], SHOW_MOVIES[45], SHOW_MOVIES[46]],
   },
   {
     id: "talk-show",
